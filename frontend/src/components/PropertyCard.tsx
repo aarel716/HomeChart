@@ -1,5 +1,5 @@
 
-interface Property {
+export interface Property {
     address: string;
     city: string;
     state: string;

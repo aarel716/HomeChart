@@ -41,9 +41,7 @@ function MaintenanceForm({ onSave }: MaintenanceFormProps) {
     };
 
     return (
-        <section className="maintenance-card mb-4">
-            <h3>Add Maintenance Record</h3>
-
+        <>
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Form onSubmit={handleSubmit}>
@@ -88,7 +86,7 @@ function MaintenanceForm({ onSave }: MaintenanceFormProps) {
 
                 <Button type="submit">Save Record</Button>
             </Form>
-        </section>
+        </>
     );
 }
 

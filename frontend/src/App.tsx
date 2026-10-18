@@ -1,7 +1,7 @@
 import { useState } from "react";
-import PropertyCard from "./components/PropertyCard";
-import MaintenanceList from "./components/MaintenanceList";
-import MaintenanceForm from "./components/MaintenanceForm";
+import { Link, Route, Routes } from "react-router-dom";
+import DashboardPage from "./pages/DashboardPage";
+import MaintenanceModal from "./components/MaintenanceModal";
 import type { MaintenanceRecord } from "./types/MaintenanceRecord";
 import { sampleProperty, sampleRecords } from "./data/sampleData";
 import "./App.css";
@@ -10,6 +10,12 @@ function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [records, setRecords] = useState(sampleRecords);
   const [message, setMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  const openModal = () => {
+    setMessage("");
+    setShowModal(true);
+  };
 
   const addRecord = (newRecord: Omit<MaintenanceRecord, "id">) => {
     setRecords((previousRecords) => {
@@ -20,12 +26,8 @@ function App() {
     });
 
     setMessage(`Saved "${newRecord.title}".`);
+    setShowModal(false);
   };
-
-  const totalCost = records.reduce(
-      (total, record) => total + record.cost,
-      0
-  );
 
   return (
       <div
@@ -36,6 +38,9 @@ function App() {
           <div>
             <h1>HomeChart</h1>
             <p>Your home's maintenance history in one place.</p>
+            <Link to="/" className="text-white">
+              Dashboard
+            </Link>
           </div>
 
           <button
@@ -51,33 +56,39 @@ function App() {
         </header>
 
         <main className="dashboard">
-          <h2>Property Dashboard</h2>
+          <Routes>
+            <Route
+                path="/"
+                element={
+                  <>
+                    <p role="status">{message}</p>
+                    <DashboardPage
+                        property={sampleProperty}
+                        records={records}
+                        onAddRecord={openModal}
+                    />
+                  </>
+                }
+            />
 
-          <PropertyCard property={sampleProperty} />
-
-          <div className="stats">
-            <div className="stat-card">
-              <h3>Total Records</h3>
-              <p>{records.length}</p>
-            </div>
-
-            <div className="stat-card">
-              <h3>Total Maintenance Cost</h3>
-              <p>
-                {totalCost.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })}
-              </p>
-            </div>
-          </div>
-
-          <MaintenanceForm onSave={addRecord} />
-
-          <p role="status">{message}</p>
-
-          <MaintenanceList records={records} />
+            <Route
+                path="*"
+                element={
+                  <>
+                    <h2>Page not found</h2>
+                    <Link to="/">Return to Dashboard</Link>
+                  </>
+                }
+            />
+          </Routes>
         </main>
+
+        <MaintenanceModal
+            show={showModal}
+            darkMode={darkMode}
+            onClose={() => setShowModal(false)}
+            onSave={addRecord}
+        />
       </div>
   );
 }
