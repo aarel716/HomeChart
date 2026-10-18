@@ -1,20 +1,25 @@
-import { Modal, Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import MaintenanceForm from "./MaintenanceForm";
-import type { MaintenanceRecord } from "../types/MaintenanceRecord";
+import type {
+    MaintenanceRecord,
+    NewMaintenanceRecord,
+} from "../types/MaintenanceRecord";
 
 interface MaintenanceModalProps {
     show: boolean;
     darkMode: boolean;
+    initialRecord?: MaintenanceRecord;
     onClose: () => void;
-    onSave: (record: Omit<MaintenanceRecord, "id">) => void;
+    onSave: (record: NewMaintenanceRecord) => void;
 }
 
-function MaintenanceModal({
+const MaintenanceModal = ({
                               show,
                               darkMode,
+                              initialRecord,
                               onClose,
                               onSave,
-                          }: MaintenanceModalProps) {
+                          }: MaintenanceModalProps) => {
     return (
         <Modal
             show={show}
@@ -26,13 +31,18 @@ function MaintenanceModal({
         >
             <Modal.Header closeButton>
                 <Modal.Title id="maintenance-modal-title">
-                    Add Maintenance Record
+                    {initialRecord ? "Edit Maintenance Record" : "Add Maintenance Record"}
                 </Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
-                <MaintenanceForm onSave={onSave} />
+                <MaintenanceForm
+                    key={initialRecord?.id ?? "new"}
+                    initialRecord={initialRecord}
+                    onSave={onSave}
+                />
             </Modal.Body>
+
             <Modal.Footer>
                 <Button variant="secondary" onClick={onClose}>
                     Cancel
@@ -40,6 +50,6 @@ function MaintenanceModal({
             </Modal.Footer>
         </Modal>
     );
-}
+};
 
 export default MaintenanceModal;

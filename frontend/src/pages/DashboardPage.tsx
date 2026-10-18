@@ -8,13 +8,17 @@ interface DashboardPageProps {
     property: Property;
     records: MaintenanceRecord[];
     onAddRecord: () => void;
+    onEditRecord: (record: MaintenanceRecord) => void;
+    onArchiveRecord: (record: MaintenanceRecord) => void;
 }
 
-function DashboardPage({
+const DashboardPage = ({
                            property,
                            records,
                            onAddRecord,
-                       }: DashboardPageProps) {
+                           onEditRecord,
+                           onArchiveRecord,
+                       }: DashboardPageProps) => {
     const totalCost = records.reduce(
         (total, record) => total + record.cost,
         0
@@ -28,12 +32,12 @@ function DashboardPage({
 
             <div className="stats">
                 <div className="stat-card">
-                    <h3>Total Records</h3>
+                    <h3>Active Records</h3>
                     <p>{records.length}</p>
                 </div>
 
                 <div className="stat-card">
-                    <h3>Total Maintenance Cost</h3>
+                    <h3>Active Maintenance Cost</h3>
                     <p>
                         {totalCost.toLocaleString("en-US", {
                             style: "currency",
@@ -47,9 +51,13 @@ function DashboardPage({
                 Add Maintenance Record
             </Button>
 
-            <MaintenanceList records={records} />
+            <MaintenanceList
+                records={records}
+                onEditRecord={onEditRecord}
+                onArchiveRecord={onArchiveRecord}
+            />
         </>
     );
-}
+};
 
 export default DashboardPage;
