@@ -9,4 +9,4 @@ export interface Property {
     isActive: boolean;
 }
 
-export type NewProperty = Omit<Property, "id">;
+export type NewProperty = Omit<Property, "id" | "isActive">;

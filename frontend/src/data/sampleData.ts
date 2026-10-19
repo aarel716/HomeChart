@@ -25,6 +25,7 @@ export const sampleProperties = [
         state: "TX",
         yearBuilt: 2008,
         propertyType: "Single Family Home",
+        isActive: true,
     },
     {
         id: 2,
@@ -33,6 +34,8 @@ export const sampleProperties = [
         state: "GA",
         yearBuilt: 2012,
         propertyType: "Rental Home",
+        isActive: true,
+
     },
 ];
 
