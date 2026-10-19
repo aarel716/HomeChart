@@ -9,6 +9,13 @@ export const maintenanceCategories = [
     "Landscaping",
     "General Maintenance",
 ];
+export const propertyTypes = [
+    "Single Family Home",
+    "Condo",
+    "Townhouse",
+    "Multi-Family Home",
+    "Other",
+];
 
 export const sampleProperties = [
     {
@@ -63,4 +70,5 @@ export const sampleRecords: MaintenanceRecord[] = [
         performedBy: "Contractor",
         isActive: true,
     },
+
 ];
