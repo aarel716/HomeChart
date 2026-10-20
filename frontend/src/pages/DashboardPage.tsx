@@ -1,6 +1,6 @@
-import { Button } from "react-bootstrap";
+import {Button} from "react-bootstrap";
 import PropertyCard from "../components/PropertyCard";
-import type { Property } from "../components/PropertyCard";
+import type { Property } from "../types/Property";
 import MaintenanceList from "../components/MaintenanceList";
 import type { MaintenanceRecord } from "../types/MaintenanceRecord";
 

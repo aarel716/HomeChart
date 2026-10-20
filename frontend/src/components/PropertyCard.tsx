@@ -1,11 +1,5 @@
 
-export interface Property {
-    address: string;
-    city: string;
-    state: string;
-    yearBuilt: number;
-    propertyType: string;
-}
+import type { Property } from "../types/Property";
 
 interface PropertyCardProps {
     property: Property;
