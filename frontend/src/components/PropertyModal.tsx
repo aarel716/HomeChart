@@ -10,7 +10,7 @@ interface PropertyModalProps {
     show: boolean;
     darkMode: boolean;
     onClose: () => void;
-    onSave: (property: NewProperty) => void;
+    onSave: (property: NewProperty) => Promise<void>;
 }
 
 const emptyAddress = {
@@ -29,6 +29,7 @@ const PropertyModal = ({
     const [error, setError] = useState("");
     const [addressFields, setAddressFields] = useState(emptyAddress);
     const currentYear = new Date().getFullYear();
+    const [isSaving, setIsSaving] = useState(false);
 
     const resetForm = () => {
         setError("");
@@ -36,7 +37,9 @@ const PropertyModal = ({
     };
 
     const handleClose = () => {
-        onClose();
+        if(!isSaving) {
+            onClose();
+        }
     };
 
     const handleAddressSelect = (suggestion: AddressSuggestion) => {
@@ -59,8 +62,11 @@ const PropertyModal = ({
         }));
     };
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if(isSaving) {
+            return;
+        }
 
         const data = new FormData(event.currentTarget);
 
@@ -106,7 +112,16 @@ const PropertyModal = ({
         }
 
         setError("");
-        onSave(property);
+        setIsSaving(true);
+
+        try{
+            await onSave(property);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Unable to save property. Please try again."
+            );
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -235,12 +250,13 @@ const PropertyModal = ({
                         type="button"
                         variant="secondary"
                         onClick={handleClose}
+                        disabled={isSaving}
                     >
                         Cancel
                     </Button>
 
-                    <Button type="submit">
-                        Save Property
+                    <Button type="submit" disabled={isSaving}>
+                        {isSaving ? "Saving..." : "Save Property"}
                     </Button>
                 </Modal.Footer>
             </Form>

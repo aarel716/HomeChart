@@ -1,24 +1,48 @@
-import { useState } from "react";
-import { sampleProperties } from "../data/sampleData";
-import type { NewProperty, Property } from "../types/Property";
+import {useEffect, useState} from "react";
+// import {getProperties} from "../services/propertyApi";
+import type {NewProperty, Property} from "../types/Property";
+import { createProperty, getProperties } from "../services/propertyApi";
+import { demoUserId } from "../data/demoConfig";
 
 export const useProperties = () => {
-    const [properties, setProperties] =
-        useState<Property[]>(sampleProperties);
+    const [properties, setProperties] = useState<Property[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const addProperty = (values: NewProperty) => {
-        setProperties((previousProperties) => {
-            const nextId =
-                Math.max(
-                    0,
-                    ...previousProperties.map((property) => property.id)
-                ) + 1;
+    useEffect(() => {
+        let cancelled = false;
 
-            return [
-                ...previousProperties,
-                { ...values, id: nextId, isActive: true },
-            ];
-        });
+        const loadProperties = async () => {
+            try {
+                const data = await getProperties();
+
+                if (!cancelled) {
+                    setProperties(data);
+                }
+            } catch {
+                if (!cancelled) {
+                    setError("Unable to load properties. Please try refreshing.");
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        loadProperties();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const addProperty = async (values: NewProperty): Promise<void> => {
+        const savedProperty = await createProperty(values, demoUserId);
+
+        setProperties((previousProperties) => [
+            ...previousProperties,
+            savedProperty,
+        ]);
     };
 
     const setPropertyActive = (
@@ -28,7 +52,7 @@ export const useProperties = () => {
         setProperties((previousProperties) =>
             previousProperties.map((property) =>
                 property.id === propertyId
-                    ? { ...property, isActive }
+                    ? {...property, isActive}
                     : property
             )
         );
@@ -44,6 +68,8 @@ export const useProperties = () => {
 
     return {
         properties,
+        isLoading,
+        error,
         addProperty,
         archiveProperty,
         restoreProperty,

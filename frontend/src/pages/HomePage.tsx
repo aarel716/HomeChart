@@ -7,7 +7,7 @@ import type { NewProperty, Property } from "../types/Property";
 interface HomePageProps {
     darkMode: boolean;
     properties: Property[];
-    onAddProperty: (values: NewProperty) => void;
+    onAddProperty: (values: NewProperty) => Promise<void>;
     onArchiveProperty: (propertyId: number) => void;
     onRestoreProperty: (propertyId: number) => void;
 }
@@ -27,8 +27,9 @@ const HomePage = ({
         (property) => property.isActive || showArchived
     );
 
-    const handleSave = (values: NewProperty) => {
-        onAddProperty(values);
+    const handleSave = async (values: NewProperty): Promise<void> => {
+        await onAddProperty(values);
+
         setShowModal(false);
         setMessage(`Added "${values.address}".`);
     };
