@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { Badge, Button, Card, Col, Form, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import {useState} from "react";
+import {Badge, Button, Card, Col, Form, Row, Alert} from "react-bootstrap";
+import {Link} from "react-router-dom";
 import PropertyModal from "../components/PropertyModal";
-import type { NewProperty, Property } from "../types/Property";
+import type {NewProperty, Property} from "../types/Property";
 
 interface HomePageProps {
     darkMode: boolean;
     properties: Property[];
     onAddProperty: (values: NewProperty) => Promise<void>;
-    onArchiveProperty: (propertyId: number) => void;
-    onRestoreProperty: (propertyId: number) => void;
+    onArchiveProperty: (propertyId: number) => Promise<void>;
+    onRestoreProperty: (propertyId: number) => Promise<void>;
 }
 
 const HomePage = ({
@@ -22,6 +22,8 @@ const HomePage = ({
     const [showModal, setShowModal] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
     const [message, setMessage] = useState("");
+    const [actionError, setActionError] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const visibleProperties = properties.filter(
         (property) => property.isActive || showArchived
@@ -39,7 +41,11 @@ const HomePage = ({
         setShowModal(true);
     };
 
-    const handleArchive = (property: Property) => {
+    const handleArchive = async (property: Property) => {
+        if (isUpdating) {
+            return;
+        }
+
         const confirmed = window.confirm(
             `Archive "${property.address}"? Its maintenance history will be kept, and you can restore it later.`
         );
@@ -48,13 +54,37 @@ const HomePage = ({
             return;
         }
 
-        onArchiveProperty(property.id);
-        setMessage(`Archived "${property.address}".`);
+        setMessage("");
+        setActionError("");
+        setIsUpdating(true);
+
+        try {
+            await onArchiveProperty(property.id);
+            setMessage(`Archived "${property.address}".`);
+        } catch {
+            setActionError("Unable to archive property. Please try again.");
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
-    const handleRestore = (property: Property) => {
-        onRestoreProperty(property.id);
-        setMessage(`Restored "${property.address}".`);
+    const handleRestore = async (property: Property) => {
+        if (isUpdating) {
+            return;
+        }
+
+        setMessage("");
+        setActionError("");
+        setIsUpdating(true);
+
+        try {
+            await onRestoreProperty(property.id);
+            setMessage(`Restored "${property.address}".`);
+        } catch {
+            setActionError("Unable to restore property. Please try again.");
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     return (
@@ -81,7 +111,7 @@ const HomePage = ({
             />
 
             <p role="status">{message}</p>
-
+            {actionError && <Alert variant="danger">{actionError}</Alert>}
             {visibleProperties.length === 0 ? (
                 <p>
                     No properties to display. Add a property or enable
@@ -110,7 +140,7 @@ const HomePage = ({
 
                                     <Card.Text>
                                         {property.propertyType}
-                                        <br />
+                                        <br/>
                                         Built in {property.yearBuilt}
                                     </Card.Text>
 
@@ -127,6 +157,7 @@ const HomePage = ({
                                             <Button
                                                 variant="outline-secondary"
                                                 onClick={() => handleArchive(property)}
+                                                disabled={isUpdating}
                                                 aria-label={`Archive ${property.address}`}
                                             >
                                                 Archive
@@ -136,6 +167,7 @@ const HomePage = ({
                                         <Button
                                             variant="outline-primary"
                                             onClick={() => handleRestore(property)}
+                                            disabled={isUpdating}
                                             aria-label={`Restore ${property.address}`}
                                         >
                                             Restore

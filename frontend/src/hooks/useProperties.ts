@@ -1,8 +1,9 @@
 import {useEffect, useState} from "react";
 // import {getProperties} from "../services/propertyApi";
 import type {NewProperty, Property} from "../types/Property";
-import { createProperty, getProperties } from "../services/propertyApi";
-import { demoUserId } from "../data/demoConfig";
+import {createProperty, getProperties, updatePropertyStatus} from "../services/propertyApi";
+import {demoUserId} from "../data/demoConfig";
+
 
 export const useProperties = () => {
     const [properties, setProperties] = useState<Property[]>([]);
@@ -45,25 +46,28 @@ export const useProperties = () => {
         ]);
     };
 
-    const setPropertyActive = (
+    const setPropertyActive = async (
         propertyId: number,
         isActive: boolean
-    ) => {
+    ): Promise<void> => {
+        const savedProperty = await updatePropertyStatus(
+            propertyId,
+            isActive
+        );
+
         setProperties((previousProperties) =>
             previousProperties.map((property) =>
-                property.id === propertyId
-                    ? {...property, isActive}
-                    : property
+                property.id === propertyId ? savedProperty : property
             )
         );
     };
 
-    const archiveProperty = (propertyId: number) => {
-        setPropertyActive(propertyId, false);
+    const archiveProperty = async (propertyId: number): Promise<void> => {
+        await setPropertyActive(propertyId, false);
     };
 
-    const restoreProperty = (propertyId: number) => {
-        setPropertyActive(propertyId, true);
+    const restoreProperty = async (propertyId: number): Promise<void> => {
+        await setPropertyActive(propertyId, true);
     };
 
     return {

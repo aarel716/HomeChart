@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Alert, Button, Form } from "react-bootstrap";
-import { maintenanceCategories } from "../data/sampleData";
+import { useMaintenanceCategories } from "../hooks/useMaintenanceCategories";
 import type {
     MaintenanceRecord,
     NewMaintenanceRecord,
@@ -17,6 +17,11 @@ const MaintenanceForm = ({
                              onSave,
                          }: MaintenanceFormProps) => {
     const [error, setError] = useState("");
+    const {
+        categories,
+        isLoading,
+        error: categoryError,
+    } = useMaintenanceCategories();
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -34,7 +39,7 @@ const MaintenanceForm = ({
             return;
         }
 
-        if (!maintenanceCategories.includes(category)) {
+        if (!categories.some((item) => item.name === category)) {
             setError("Select a maintenance category.");
             return;
         }
@@ -62,6 +67,22 @@ const MaintenanceForm = ({
         form.reset();
     };
 
+    if (isLoading) {
+        return <p role="status">Loading maintenance categories...</p>;
+    }
+
+    if (categoryError) {
+        return <Alert variant="danger">{categoryError}</Alert>;
+    }
+
+    if (categories.length === 0) {
+        return (
+            <Alert variant="warning">
+                No maintenance categories are available.
+            </Alert>
+        );
+    }
+
     return (
         <>
             {error && <Alert variant="danger">{error}</Alert>}
@@ -88,9 +109,9 @@ const MaintenanceForm = ({
                         <option value="" disabled>
                             Select a category
                         </option>
-                        {maintenanceCategories.map((category) => (
-                            <option key={category} value={category}>
-                                {category}
+                        {categories.map((category) => (
+                            <option key={category.id} value={category.name}>
+                                {category.name}
                             </option>
                         ))}
                     </Form.Select>
@@ -115,7 +136,9 @@ const MaintenanceForm = ({
                         name="performedBy"
                         label="Contractor"
                         value="Contractor"
-                        defaultChecked={initialRecord?.performedBy === "Contractor"}
+                        defaultChecked={
+                            initialRecord?.performedBy === "Contractor"
+                        }
                         required
                     />
                 </fieldset>
@@ -145,7 +168,10 @@ const MaintenanceForm = ({
                     </Form.Text>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="maintenance-description">
+                <Form.Group
+                    className="mb-3"
+                    controlId="maintenance-description"
+                >
                     <Form.Label>Description (optional)</Form.Label>
                     <Form.Control
                         name="description"

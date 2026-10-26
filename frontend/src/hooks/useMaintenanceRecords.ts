@@ -1,13 +1,11 @@
 import {useState} from "react";
-import {sampleRecords} from "../data/sampleData";
 import type {
     MaintenanceRecord,
     NewMaintenanceRecord,
 } from "../types/MaintenanceRecord";
 
 export const useMaintenanceRecords = () => {
-    const [records, setRecords] =
-        useState<MaintenanceRecord[]>(sampleRecords);
+    const [records, setRecords] = useState<MaintenanceRecord[]>([]);
 
     const addRecord = (
         values: NewMaintenanceRecord,

@@ -1,4 +1,4 @@
-import type { NewProperty, Property } from "../types/Property";
+import type {NewProperty, Property} from "../types/Property";
 
 export const getProperties = async (): Promise<Property[]> => {
     const response = await fetch("/api/properties");
@@ -27,6 +27,24 @@ export const createProperty = async (
 
     if (!response.ok) {
         throw new Error("Unable to create property.");
+    }
+
+    return response.json();
+};
+
+export const updatePropertyStatus = async (
+    propertyId: number,
+    isActive: boolean
+): Promise<Property> => {
+    const response = await fetch(
+        `/api/properties/${propertyId}/active?isActive=${isActive}`,
+        {
+            method: "PATCH",
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Unable to update property status.");
     }
 
     return response.json();

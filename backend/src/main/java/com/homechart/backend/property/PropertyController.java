@@ -28,4 +28,12 @@ public class PropertyController {
     ) {
         return propertyService.createProperty(request);
     }
+
+    @PatchMapping("/{id}/active")
+    public PropertyResponse setPropertyActive(
+            @PathVariable Long id,
+            @RequestParam boolean isActive
+    ) {
+        return propertyService.setPropertyActive(id, isActive);
+    }
 }

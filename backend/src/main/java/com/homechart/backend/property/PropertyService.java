@@ -58,6 +58,19 @@ public class PropertyService {
 
         return toResponse(savedProperty);
     }
+    @Transactional
+    public PropertyResponse setPropertyActive(Long id, boolean isActive) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Property not found"
+                ));
+
+        property.setActive(isActive);
+
+        Property savedProperty = propertyRepository.save(property);
+
+        return toResponse(savedProperty);
+    }
 
     private PropertyResponse toResponse(Property property) {
         return new PropertyResponse(
