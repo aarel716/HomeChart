@@ -13,4 +13,6 @@ export interface MaintenanceRecord {
 export type NewMaintenanceRecord = Omit<
     MaintenanceRecord,
     "id" | "propertyId" | "isActive"
->;
+> & {
+    categoryId: number;
+};

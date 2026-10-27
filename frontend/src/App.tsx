@@ -1,15 +1,16 @@
-import {useState} from "react";
-import {Link, Route, Routes} from "react-router-dom";
-import {Alert, Spinner} from "react-bootstrap";
+import { useState } from "react";
+import { Link, Route, Routes } from "react-router-dom";
+import { Alert, Spinner } from "react-bootstrap";
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import PropertyPage from "./pages/PropertyPage";
-import {useProperties} from "./hooks/useProperties";
-import {useMaintenanceRecords} from "./hooks/useMaintenanceRecords";
+import { useProperties } from "./hooks/useProperties";
+import { useMaintenanceRecords } from "./hooks/useMaintenanceRecords";
 import "./App.css";
 
 const App = () => {
     const [darkMode, setDarkMode] = useState(true);
+
     const {
         properties,
         isLoading,
@@ -21,6 +22,8 @@ const App = () => {
 
     const {
         records,
+        isLoading: recordsLoading,
+        error: recordsError,
         addRecord,
         updateRecord,
         archiveRecord,
@@ -40,8 +43,15 @@ const App = () => {
 
             <main className="dashboard">
                 {isLoading && (
-                    <div role="status" className="d-flex align-items-center gap-2">
-                        <Spinner animation="border" size="sm" aria-hidden="true"/>
+                    <div
+                        role="status"
+                        className="d-flex align-items-center gap-2"
+                    >
+                        <Spinner
+                            animation="border"
+                            size="sm"
+                            aria-hidden="true"
+                        />
                         <span>Loading properties...</span>
                     </div>
                 )}
@@ -62,6 +72,7 @@ const App = () => {
                                 />
                             }
                         />
+
                         <Route
                             path="/properties/:propertyId"
                             element={
@@ -71,12 +82,15 @@ const App = () => {
                                         (property) => property.isActive
                                     )}
                                     records={records}
+                                    isLoading={recordsLoading}
+                                    error={recordsError}
                                     onAddRecord={addRecord}
                                     onUpdateRecord={updateRecord}
                                     onArchiveRecord={archiveRecord}
                                 />
                             }
                         />
+
                         <Route
                             path="*"
                             element={

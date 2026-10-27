@@ -8,30 +8,42 @@ import type {
 interface MaintenanceModalProps {
     show: boolean;
     darkMode: boolean;
+    isSaving: boolean;
     initialRecord?: MaintenanceRecord;
     onClose: () => void;
-    onSave: (record: NewMaintenanceRecord) => void;
+    onSave: (record: NewMaintenanceRecord) => Promise<void>;
 }
 
 const MaintenanceModal = ({
                               show,
                               darkMode,
+                              isSaving,
                               initialRecord,
                               onClose,
                               onSave,
                           }: MaintenanceModalProps) => {
+    const handleClose = () => {
+        if (!isSaving) {
+            onClose();
+        }
+    };
+
     return (
         <Modal
             show={show}
-            onHide={onClose}
+            onHide={handleClose}
+            backdrop={isSaving ? "static" : true}
+            keyboard={!isSaving}
             data-bs-theme={darkMode ? "dark" : "light"}
             aria-labelledby="maintenance-modal-title"
             centered
             scrollable
         >
-            <Modal.Header closeButton>
+            <Modal.Header closeButton={!isSaving}>
                 <Modal.Title id="maintenance-modal-title">
-                    {initialRecord ? "Edit Maintenance Record" : "Add Maintenance Record"}
+                    {initialRecord
+                        ? "Edit Maintenance Record"
+                        : "Add Maintenance Record"}
                 </Modal.Title>
             </Modal.Header>
 
@@ -39,12 +51,17 @@ const MaintenanceModal = ({
                 <MaintenanceForm
                     key={initialRecord?.id ?? "new"}
                     initialRecord={initialRecord}
+                    isSaving={isSaving}
                     onSave={onSave}
                 />
             </Modal.Body>
 
             <Modal.Footer>
-                <Button variant="secondary" onClick={onClose}>
+                <Button
+                    variant="secondary"
+                    onClick={handleClose}
+                    disabled={isSaving}
+                >
                     Cancel
                 </Button>
             </Modal.Footer>

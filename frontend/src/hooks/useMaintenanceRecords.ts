@@ -1,4 +1,8 @@
-import {useState} from "react";
+import { useEffect, useState } from "react";
+import {
+    createMaintenanceRecord,
+    getMaintenanceRecords,
+} from "../services/maintenanceRecordApi";
 import type {
     MaintenanceRecord,
     NewMaintenanceRecord,
@@ -6,24 +10,51 @@ import type {
 
 export const useMaintenanceRecords = () => {
     const [records, setRecords] = useState<MaintenanceRecord[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const addRecord = (
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadRecords = async () => {
+            try {
+                const data = await getMaintenanceRecords();
+
+                if (!cancelled) {
+                    setRecords(data);
+                }
+            } catch {
+                if (!cancelled) {
+                    setError("Unable to load maintenance records.");
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        loadRecords();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const addRecord = async (
         values: NewMaintenanceRecord,
         propertyId: number
-    ) => {
-        setRecords((previousRecords) => {
-            const nextId =
-                Math.max(0, ...previousRecords.map((record) => record.id)) + 1;
+    ): Promise<void> => {
+        const savedRecord = await createMaintenanceRecord(
+            values,
+            propertyId,
+            values.categoryId
+        );
 
-            const newRecord: MaintenanceRecord = {
-                ...values,
-                id: nextId,
-                propertyId,
-                isActive: true,
-            };
-
-            return [newRecord, ...previousRecords];
-        });
+        setRecords((previousRecords) => [
+            savedRecord,
+            ...previousRecords,
+        ]);
     };
 
     const updateRecord = (
@@ -33,7 +64,7 @@ export const useMaintenanceRecords = () => {
         setRecords((previousRecords) =>
             previousRecords.map((record) =>
                 record.id === recordId
-                    ? {...record, ...values}
+                    ? { ...record, ...values }
                     : record
             )
         );
@@ -43,7 +74,7 @@ export const useMaintenanceRecords = () => {
         setRecords((previousRecords) =>
             previousRecords.map((record) =>
                 record.id === recordId
-                    ? {...record, isActive: false}
+                    ? { ...record, isActive: false }
                     : record
             )
         );
@@ -51,6 +82,8 @@ export const useMaintenanceRecords = () => {
 
     return {
         records,
+        isLoading,
+        error,
         addRecord,
         updateRecord,
         archiveRecord,

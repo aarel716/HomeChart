@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form } from "react-bootstrap";
+import { Alert, Form, Spinner } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import DashboardPage from "./DashboardPage";
 import MaintenanceModal from "../components/MaintenanceModal";
@@ -13,10 +13,12 @@ interface PropertyPageProps {
     darkMode: boolean;
     properties: Property[];
     records: MaintenanceRecord[];
+    isLoading: boolean;
+    error: string;
     onAddRecord: (
         values: NewMaintenanceRecord,
         propertyId: number
-    ) => void;
+    ) => Promise<void>;
     onUpdateRecord: (
         recordId: number,
         values: NewMaintenanceRecord
@@ -28,6 +30,8 @@ const PropertyPage = ({
                           darkMode,
                           properties,
                           records,
+                          isLoading,
+                          error,
                           onAddRecord,
                           onUpdateRecord,
                           onArchiveRecord,
@@ -37,6 +41,7 @@ const PropertyPage = ({
 
     const [message, setMessage] = useState("");
     const [showModal, setShowModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [editingRecord, setEditingRecord] =
         useState<MaintenanceRecord | undefined>(undefined);
 
@@ -68,21 +73,29 @@ const PropertyPage = ({
         setShowModal(true);
     };
 
-    const handleSave = (values: NewMaintenanceRecord) => {
+    const handleSave = async (
+        values: NewMaintenanceRecord
+    ): Promise<void> => {
         if (!selectedProperty) {
-            return;
+            throw new Error("Property not found.");
         }
 
-        if (editingRecord) {
-            onUpdateRecord(editingRecord.id, values);
-        } else {
-            onAddRecord(values, selectedProperty.id);
-        }
+        setIsSaving(true);
 
-        setMessage(
-            `${editingRecord ? "Updated" : "Added"} "${values.title}".`
-        );
-        setShowModal(false);
+        try {
+            if (editingRecord) {
+                onUpdateRecord(editingRecord.id, values);
+            } else {
+                await onAddRecord(values, selectedProperty.id);
+            }
+
+            setMessage(
+                `${editingRecord ? "Updated" : "Added"} "${values.title}".`
+            );
+            setShowModal(false);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleArchive = (record: MaintenanceRecord) => {
@@ -107,6 +120,39 @@ const PropertyPage = ({
         );
     }
 
+    if (isLoading) {
+        return (
+            <>
+                <Link to="/" className="d-inline-block mb-3">
+                    Back to My Properties
+                </Link>
+
+                <div
+                    role="status"
+                    className="d-flex align-items-center gap-2"
+                >
+                    <Spinner
+                        animation="border"
+                        size="sm"
+                        aria-hidden="true"
+                    />
+                    <span>Loading maintenance records...</span>
+                </div>
+            </>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <Link to="/">Back to My Properties</Link>
+                <Alert variant="danger" className="mt-3">
+                    {error}
+                </Alert>
+            </>
+        );
+    }
+
     return (
         <>
             <Link to="/" className="d-inline-block mb-3">
@@ -118,6 +164,7 @@ const PropertyPage = ({
 
                 <Form.Select
                     value={selectedProperty.id}
+                    disabled={isSaving}
                     onChange={(event) =>
                         selectProperty(Number(event.target.value))
                     }
@@ -144,6 +191,7 @@ const PropertyPage = ({
             <MaintenanceModal
                 show={showModal}
                 darkMode={darkMode}
+                isSaving={isSaving}
                 initialRecord={editingRecord}
                 onClose={() => setShowModal(false)}
                 onSave={handleSave}
