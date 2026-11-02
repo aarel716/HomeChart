@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
+    archiveMaintenanceRecord,
     createMaintenanceRecord,
+    updateMaintenanceRecord,
     getMaintenanceRecords,
 } from "../services/maintenanceRecordApi";
 import type {
@@ -57,25 +59,30 @@ export const useMaintenanceRecords = () => {
         ]);
     };
 
-    const updateRecord = (
+    const updateRecord = async (
         recordId: number,
         values: NewMaintenanceRecord
-    ) => {
+    ): Promise<void> => {
+        const existingRecord = records.find((record) => record.id === recordId);
+        if (!existingRecord) {
+            throw new Error("Maintenance record not found. Refresh and try again.");
+        }
+
+        const savedRecord = await updateMaintenanceRecord(
+            recordId, values, existingRecord.propertyId
+        );
         setRecords((previousRecords) =>
             previousRecords.map((record) =>
-                record.id === recordId
-                    ? { ...record, ...values }
-                    : record
+                record.id === recordId ? savedRecord : record
             )
         );
     };
 
-    const archiveRecord = (recordId: number) => {
+    const archiveRecord = async (recordId: number): Promise<void> => {
+        const savedRecord = await archiveMaintenanceRecord(recordId);
         setRecords((previousRecords) =>
             previousRecords.map((record) =>
-                record.id === recordId
-                    ? { ...record, isActive: false }
-                    : record
+                record.id === recordId ? savedRecord : record
             )
         );
     };

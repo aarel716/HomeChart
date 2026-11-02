@@ -28,8 +28,9 @@ const PropertyModal = ({
                        }: PropertyModalProps) => {
     const [error, setError] = useState("");
     const [addressFields, setAddressFields] = useState(emptyAddress);
-    const currentYear = new Date().getFullYear();
     const [isSaving, setIsSaving] = useState(false);
+
+    const currentYear = new Date().getFullYear();
 
     const resetForm = () => {
         setError("");
@@ -37,7 +38,7 @@ const PropertyModal = ({
     };
 
     const handleClose = () => {
-        if(!isSaving) {
+        if (!isSaving) {
             onClose();
         }
     };
@@ -49,6 +50,7 @@ const PropertyModal = ({
             state: suggestion.state_code?.toUpperCase() ?? "",
             zipCode: suggestion.postcode ?? "",
         });
+
         setError("");
     };
 
@@ -62,9 +64,12 @@ const PropertyModal = ({
         }));
     };
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (
+        event: FormEvent<HTMLFormElement>
+    ) => {
         event.preventDefault();
-        if(isSaving) {
+
+        if (isSaving) {
             return;
         }
 
@@ -114,10 +119,13 @@ const PropertyModal = ({
         setError("");
         setIsSaving(true);
 
-        try{
+        try {
             await onSave(property);
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Unable to save property. Please try again."
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to save property. Please try again."
             );
         } finally {
             setIsSaving(false);
@@ -144,19 +152,29 @@ const PropertyModal = ({
                 onSubmit={handleSubmit}
                 className="d-flex flex-column"
                 style={{ minHeight: 0, overflow: "hidden" }}
-                >
+            >
                 <Modal.Body>
                     {error && <Alert variant="danger">{error}</Alert>}
 
-                    <AddressAutocomplete onSelect={handleAddressSelect} />
+                    {import.meta.env.VITE_GEOAPIFY_API_KEY && (
+                        <AddressAutocomplete
+                            onSelect={handleAddressSelect}
+                        />
+                    )}
 
-                    <Form.Group className="mb-3" controlId="property-address">
+                    <Form.Group
+                        className="mb-3"
+                        controlId="property-address"
+                    >
                         <Form.Label>Street address</Form.Label>
                         <Form.Control
                             name="address"
                             value={addressFields.address}
                             onChange={(event) =>
-                                updateAddressField("address", event.target.value)
+                                updateAddressField(
+                                    "address",
+                                    event.target.value
+                                )
                             }
                             autoComplete="address-line1"
                             maxLength={200}
@@ -164,13 +182,19 @@ const PropertyModal = ({
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="property-city">
+                    <Form.Group
+                        className="mb-3"
+                        controlId="property-city"
+                    >
                         <Form.Label>City</Form.Label>
                         <Form.Control
                             name="city"
                             value={addressFields.city}
                             onChange={(event) =>
-                                updateAddressField("city", event.target.value)
+                                updateAddressField(
+                                    "city",
+                                    event.target.value
+                                )
                             }
                             autoComplete="address-level2"
                             maxLength={100}
@@ -178,7 +202,10 @@ const PropertyModal = ({
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="property-state">
+                    <Form.Group
+                        className="mb-3"
+                        controlId="property-state"
+                    >
                         <Form.Label>State abbreviation</Form.Label>
                         <Form.Control
                             name="state"
@@ -198,13 +225,19 @@ const PropertyModal = ({
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="property-zip">
+                    <Form.Group
+                        className="mb-3"
+                        controlId="property-zip"
+                    >
                         <Form.Label>ZIP code (optional)</Form.Label>
                         <Form.Control
                             name="zipCode"
                             value={addressFields.zipCode}
                             onChange={(event) =>
-                                updateAddressField("zipCode", event.target.value)
+                                updateAddressField(
+                                    "zipCode",
+                                    event.target.value
+                                )
                             }
                             autoComplete="postal-code"
                             maxLength={10}
@@ -213,7 +246,10 @@ const PropertyModal = ({
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="property-year">
+                    <Form.Group
+                        className="mb-3"
+                        controlId="property-year"
+                    >
                         <Form.Label>Year built</Form.Label>
                         <Form.Control
                             name="yearBuilt"
@@ -225,7 +261,10 @@ const PropertyModal = ({
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="property-type">
+                    <Form.Group
+                        className="mb-3"
+                        controlId="property-type"
+                    >
                         <Form.Label>Property type</Form.Label>
                         <Form.Select
                             name="propertyType"

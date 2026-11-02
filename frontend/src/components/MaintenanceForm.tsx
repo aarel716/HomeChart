@@ -19,6 +19,8 @@ const MaintenanceForm = ({
                              onSave,
                          }: MaintenanceFormProps) => {
     const [error, setError] = useState("");
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
     const {
         categories,
@@ -38,7 +40,9 @@ const MaintenanceForm = ({
         const title = String(data.get("title") ?? "").trim();
         const category = String(data.get("category") ?? "");
         const performedBy = data.get("performedBy");
-        const cost = Number(data.get("cost"));
+        const rawCost = String(data.get("cost") ?? "").trim();
+        const cost = Number(rawCost);
+        const date = String(data.get("date") ?? "");
 
         if (!title) {
             setError("Enter a maintenance title.");
@@ -59,8 +63,14 @@ const MaintenanceForm = ({
             return;
         }
 
-        if (!Number.isFinite(cost) || cost < 0) {
-            setError("Enter a valid cost of zero or more.");
+        if (!date || date > today) {
+            setError("Choose today or an earlier completion date.");
+            return;
+        }
+
+        if (!rawCost || !Number.isFinite(cost) || cost < 0 || cost > 99999999.99
+            || !/^\d+(\.\d{1,2})?$/.test(rawCost)) {
+            setError("Enter a cost from 0 to 99,999,999.99 with at most two decimal places.");
             return;
         }
 
@@ -73,13 +83,12 @@ const MaintenanceForm = ({
                 categoryId: selectedCategory.id,
                 performedBy,
                 cost,
-                date: String(data.get("date") ?? ""),
+                date,
                 description: String(data.get("description") ?? "").trim(),
             });
-        } catch {
-            setError(
-                "Unable to save. Check your entries and backend connection, then try again."
-            );
+        } catch (error) {
+            setError(error instanceof Error
+                ? error.message : "Unable to save. Check your connection and try again.");
         }
     };
 
@@ -185,6 +194,7 @@ const MaintenanceForm = ({
                         <Form.Control
                             name="date"
                             type="date"
+                            max={today}
                             defaultValue={initialRecord?.date ?? ""}
                             required
                         />

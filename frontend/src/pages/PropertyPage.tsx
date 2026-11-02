@@ -22,8 +22,8 @@ interface PropertyPageProps {
     onUpdateRecord: (
         recordId: number,
         values: NewMaintenanceRecord
-    ) => void;
-    onArchiveRecord: (recordId: number) => void;
+    ) => Promise<void>;
+    onArchiveRecord: (recordId: number) => Promise<void>;
 }
 
 const PropertyPage = ({
@@ -40,6 +40,8 @@ const PropertyPage = ({
     const navigate = useNavigate();
 
     const [message, setMessage] = useState("");
+    const [actionError, setActionError] = useState("");
+    const [isArchiving, setIsArchiving] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingRecord, setEditingRecord] =
@@ -58,18 +60,21 @@ const PropertyPage = ({
         setEditingRecord(undefined);
         setShowModal(false);
         setMessage("");
+        setActionError("");
         navigate(`/properties/${id}`);
     };
 
     const openAddModal = () => {
         setEditingRecord(undefined);
         setMessage("");
+        setActionError("");
         setShowModal(true);
     };
 
     const openEditModal = (record: MaintenanceRecord) => {
         setEditingRecord(record);
         setMessage("");
+        setActionError("");
         setShowModal(true);
     };
 
@@ -84,7 +89,7 @@ const PropertyPage = ({
 
         try {
             if (editingRecord) {
-                onUpdateRecord(editingRecord.id, values);
+                await onUpdateRecord(editingRecord.id, values);
             } else {
                 await onAddRecord(values, selectedProperty.id);
             }
@@ -98,17 +103,30 @@ const PropertyPage = ({
         }
     };
 
-    const handleArchive = (record: MaintenanceRecord) => {
+    const handleArchive = async (record: MaintenanceRecord): Promise<void> => {
+        if (isSaving || isArchiving) {
+            return;
+        }
+
         const confirmed = window.confirm(
             `Archive "${record.title}"? It will be hidden from active history and totals, but kept in your records.`
         );
-
         if (!confirmed) {
             return;
         }
 
-        onArchiveRecord(record.id);
-        setMessage(`Archived "${record.title}".`);
+        setMessage("");
+        setActionError("");
+        setIsArchiving(true);
+        try {
+            await onArchiveRecord(record.id);
+            setMessage(`Archived "${record.title}".`);
+        } catch (error) {
+            setActionError(error instanceof Error
+                ? error.message : "Unable to archive. Please try again.");
+        } finally {
+            setIsArchiving(false);
+        }
     };
 
     if (!selectedProperty) {
@@ -164,7 +182,7 @@ const PropertyPage = ({
 
                 <Form.Select
                     value={selectedProperty.id}
-                    disabled={isSaving}
+                    disabled={isSaving || isArchiving}
                     onChange={(event) =>
                         selectProperty(Number(event.target.value))
                     }
@@ -177,10 +195,12 @@ const PropertyPage = ({
                 </Form.Select>
             </Form.Group>
 
-            <p role="status">{message}</p>
+            <p role="status">{isArchiving ? "Archiving record..." : message}</p>
+            {actionError && <Alert variant="danger">{actionError}</Alert>}
 
             <DashboardPage
                 key={selectedProperty.id}
+                isBusy={isSaving || isArchiving}
                 property={selectedProperty}
                 records={propertyRecords}
                 onAddRecord={openAddModal}

@@ -64,10 +64,68 @@ export const createMaintenanceRecord = async (
     });
 
     if (!response.ok) {
-        throw new Error("Unable to save maintenance record.");
+        throw new Error(await getErrorMessage(response, "Unable to save maintenance record."));
     }
 
     const savedRecord: MaintenanceRecordResponse = await response.json();
 
     return toMaintenanceRecord(savedRecord);
+};
+export const updateMaintenanceRecord = async (
+    recordId: number,
+    values: NewMaintenanceRecord,
+    propertyId: number
+): Promise<MaintenanceRecord> => {
+    const response = await fetch(`/api/maintenance-records/${recordId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            propertyId,
+            categoryId: values.categoryId,
+            title: values.title,
+            description: values.description,
+            completionDate: values.date,
+            performedBy: values.performedBy,
+            cost: values.cost,
+        }),
+    });
+
+    if (!response.ok) {
+        throw new Error(await getErrorMessage(response, "Unable to update maintenance record."));
+    }
+
+    const savedRecord: MaintenanceRecordResponse = await response.json();
+    return toMaintenanceRecord(savedRecord);
+};
+
+export const archiveMaintenanceRecord = async (
+    recordId: number
+): Promise<MaintenanceRecord> => {
+    const response = await fetch(
+        `/api/maintenance-records/${recordId}/active?isActive=false`,
+        { method: "PATCH" }
+    );
+
+    if (!response.ok) {
+        throw new Error(await getErrorMessage(response, "Unable to archive maintenance record."));
+    }
+
+    const savedRecord: MaintenanceRecordResponse = await response.json();
+    return toMaintenanceRecord(savedRecord);
+};
+
+const getErrorMessage = async (
+    response: Response,
+    fallback: string
+): Promise<string> => {
+    try {
+        const body: unknown = await response.json();
+        if (body && typeof body === "object" && "detail" in body
+            && typeof body.detail === "string") {
+            return body.detail;
+        }
+    } catch {
+        // A stopped backend or proxy may return a non-JSON response.
+    }
+    return fallback;
 };

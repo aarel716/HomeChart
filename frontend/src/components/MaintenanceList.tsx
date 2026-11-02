@@ -3,12 +3,14 @@ import { Button, Form } from "react-bootstrap";
 import type { MaintenanceRecord } from "../types/MaintenanceRecord";
 
 interface MaintenanceListProps {
+    isBusy: boolean;
     records: MaintenanceRecord[];
     onEditRecord: (record: MaintenanceRecord) => void;
     onArchiveRecord: (record: MaintenanceRecord) => void;
 }
 
 const MaintenanceList = ({
+                             isBusy,
                              records,
                              onEditRecord,
                              onArchiveRecord,
@@ -67,6 +69,7 @@ const MaintenanceList = ({
 
                                 <div className="d-flex flex-wrap justify-content-end gap-2">
                                     <Button
+                                        disabled={isBusy}
                                         type="button"
                                         variant="outline-primary"
                                         size="sm"
@@ -77,6 +80,7 @@ const MaintenanceList = ({
                                     </Button>
 
                                     <Button
+                                        disabled={isBusy}
                                         type="button"
                                         variant="outline-secondary"
                                         size="sm"

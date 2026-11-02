@@ -35,7 +35,7 @@ public class MaintenanceRecordService {
     }
 
     public List<MaintenanceRecordResponse> getAllRecords() {
-        return repository.findAll()
+        return repository.findAllWithDetails()
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -86,6 +86,82 @@ public class MaintenanceRecordService {
         expenseRepository.save(expense);
 
         return toResponse(savedRecord);
+    }
+
+    @Transactional
+    public MaintenanceRecordResponse updateRecord(
+            Long id, MaintenanceRecordRequest request) {
+        MaintenanceRecord record = findRecord(id);
+
+        if (!record.isActive() || !record.getProperty().isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot edit archived maintenance or maintenance on an archived property"
+            );
+        }
+
+        if (!record.getProperty().getId().equals(request.propertyId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "A maintenance record cannot change properties"
+            );
+        }
+
+        MaintenanceCategory category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Maintenance category not found"
+                ));
+
+        List<MaintenanceExpense> expenses = expenseRepository
+                .findByMaintenanceRecordId(id);
+
+        // This form edits one total job cost, not individual expense line items.
+        // Refuse to overwrite itemized data if it was added outside this form.
+        if (expenses.size() > 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "This record has itemized expenses and cannot be edited with the total-cost form"
+            );
+        }
+
+        record.setCategory(category);
+        record.setTitle(request.title().trim());
+        record.setDescription(request.description() == null
+                ? null : request.description().trim());
+        record.setCompletionDate(request.completionDate());
+        record.setPerformedBy(request.performedBy());
+
+        MaintenanceExpense expense = expenses.isEmpty()
+                ? new MaintenanceExpense() : expenses.getFirst();
+        expense.setMaintenanceRecord(record);
+        expense.setDescription("Total job cost");
+        expense.setAmount(request.cost());
+        expense.setExpenseDate(request.completionDate());
+
+        repository.save(record);
+        expenseRepository.save(expense);
+
+        return toResponse(record);
+    }
+
+    @Transactional
+    public MaintenanceRecordResponse setRecordActive(Long id, boolean isActive) {
+        MaintenanceRecord record = findRecord(id);
+
+        if (!record.getProperty().isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Restore the property before changing its maintenance"
+            );
+        }
+
+        record.setActive(isActive);
+        return toResponse(repository.save(record));
+    }
+
+    private MaintenanceRecord findRecord(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Maintenance record not found"
+                ));
     }
 
     private MaintenanceRecordResponse toResponse(

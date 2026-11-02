@@ -5,6 +5,7 @@ import MaintenanceList from "../components/MaintenanceList";
 import type { MaintenanceRecord } from "../types/MaintenanceRecord";
 
 interface DashboardPageProps {
+    isBusy: boolean;
     property: Property;
     records: MaintenanceRecord[];
     onAddRecord: () => void;
@@ -13,6 +14,7 @@ interface DashboardPageProps {
 }
 
 const DashboardPage = ({
+                           isBusy,
                            property,
                            records,
                            onAddRecord,
@@ -47,11 +49,12 @@ const DashboardPage = ({
                 </div>
             </div>
 
-            <Button className="mb-4" onClick={onAddRecord}>
+            <Button className="mb-4" onClick={onAddRecord} disabled={isBusy}>
                 Add Maintenance Record
             </Button>
 
             <MaintenanceList
+                isBusy={isBusy}
                 records={records}
                 onEditRecord={onEditRecord}
                 onArchiveRecord={onArchiveRecord}

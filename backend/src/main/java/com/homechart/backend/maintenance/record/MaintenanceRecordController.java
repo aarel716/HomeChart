@@ -28,4 +28,18 @@ public class MaintenanceRecordController {
             @Valid @RequestBody MaintenanceRecordRequest request) {
         return service.createRecord(request);
     }
+
+    @PutMapping("/{id}")
+    public MaintenanceRecordResponse updateRecord(
+            @PathVariable Long id,
+            @Valid @RequestBody MaintenanceRecordRequest request) {
+        return service.updateRecord(id, request);
+    }
+
+    @PatchMapping("/{id}/active")
+    public MaintenanceRecordResponse setRecordActive(
+            @PathVariable Long id,
+            @RequestParam boolean isActive) {
+        return service.setRecordActive(id, isActive);
+    }
 }
