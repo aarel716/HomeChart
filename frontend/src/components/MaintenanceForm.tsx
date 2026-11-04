@@ -1,6 +1,8 @@
 import { useState } from "react";
+import type { Contractor, NewContractor } from "../types/Contractor.ts";
 import type { FormEvent } from "react";
 import { Alert, Button, Form } from "react-bootstrap";
+import ContractorForm from "./ContractorForm";
 import { useMaintenanceCategories } from "../hooks/useMaintenanceCategories";
 import type {
     MaintenanceRecord,
@@ -9,16 +11,36 @@ import type {
 
 interface MaintenanceFormProps {
     initialRecord?: MaintenanceRecord;
+    contractors: Contractor[];
+    contractorsLoading: boolean;
+    contractorsError: string;
+    onAddContractor: (values: NewContractor) => Promise<Contractor>;
     isSaving: boolean;
+    onContractorSavingChange: (isSaving: boolean) => void;
     onSave: (record: NewMaintenanceRecord) => Promise<void>;
 }
 
 const MaintenanceForm = ({
+                             contractors,
+                             contractorsLoading,
+                             contractorsError,
+                             onAddContractor,
                              initialRecord,
                              isSaving,
+                             onContractorSavingChange,
                              onSave,
                          }: MaintenanceFormProps) => {
     const [error, setError] = useState("");
+    const [performedBy, setPerformedBy] = useState(initialRecord?.performedBy ?? "DIY");
+    const [contractorId, setContractorId] = useState(String(initialRecord?.contractorId ?? ""));
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
+    const keepUnrecorded = initialRecord?.performedBy === "Contractor" && !initialRecord.contractorId;
+    const availableContractors = contractors.filter((item) => item.isActive || item.id === initialRecord?.contractorId);
+    const handleAddContractor = async (values: NewContractor) => {
+        const saved = await onAddContractor(values);
+        setContractorId(String(saved.id));
+        setShowQuickAdd(false);
+    };
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
@@ -39,7 +61,6 @@ const MaintenanceForm = ({
 
         const title = String(data.get("title") ?? "").trim();
         const category = String(data.get("category") ?? "");
-        const performedBy = data.get("performedBy");
         const rawCost = String(data.get("cost") ?? "").trim();
         const cost = Number(rawCost);
         const date = String(data.get("date") ?? "");
@@ -63,6 +84,12 @@ const MaintenanceForm = ({
             return;
         }
 
+        if (performedBy === "Contractor" && (contractorsLoading || contractorsError
+            || (!contractorId && !keepUnrecorded))) {
+            setError(contractorsError || "Select a contractor before saving.");
+            return;
+        }
+
         if (!date || date > today) {
             setError("Choose today or an earlier completion date.");
             return;
@@ -82,6 +109,7 @@ const MaintenanceForm = ({
                 category,
                 categoryId: selectedCategory.id,
                 performedBy,
+                contractorId: performedBy === "Contractor" && contractorId ? Number(contractorId) : null,
                 cost,
                 date,
                 description: String(data.get("description") ?? "").trim(),
@@ -112,7 +140,7 @@ const MaintenanceForm = ({
         <>
             {error && <Alert variant="danger">{error}</Alert>}
 
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleSubmit} hidden={showQuickAdd}>
                 <fieldset disabled={isSaving}>
                     <legend className="visually-hidden">
                         Maintenance record details
@@ -167,9 +195,8 @@ const MaintenanceForm = ({
                             name="performedBy"
                             label="DIY"
                             value="DIY"
-                            defaultChecked={
-                                initialRecord?.performedBy === "DIY"
-                            }
+                            checked={performedBy === "DIY"}
+                            onChange={() => setPerformedBy("DIY")}
                             required
                         />
                         <Form.Check
@@ -179,12 +206,30 @@ const MaintenanceForm = ({
                             name="performedBy"
                             label="Contractor"
                             value="Contractor"
-                            defaultChecked={
-                                initialRecord?.performedBy === "Contractor"
-                            }
+                            checked={performedBy === "Contractor"}
+                            onChange={() => setPerformedBy("Contractor")}
                             required
                         />
                     </fieldset>
+
+                    {performedBy === "Contractor" && (
+                        <Form.Group className="mb-3" controlId="maintenance-contractor">
+                            <Form.Label>Contractor</Form.Label>
+                            {contractorsLoading && <p role="status">Loading contractors...</p>}
+                            {contractorsError && <Alert variant="danger">{contractorsError}</Alert>}
+                            <Form.Select value={contractorId} onChange={(event) => setContractorId(event.target.value)}
+                                         disabled={contractorsLoading || !!contractorsError} required={!keepUnrecorded}>
+                                <option value="">{keepUnrecorded ? "Not recorded (older record)" : "Select a contractor"}</option>
+                                {availableContractors.map((contractor) => (
+                                    <option key={contractor.id} value={contractor.id}>
+                                        {contractor.name} — {contractor.categoryName}{!contractor.isActive ? " (archived)" : ""}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                            <Button className="mt-2" variant="outline-primary" onClick={() => setShowQuickAdd(true)}
+                                    disabled={contractorsLoading || !!contractorsError}>Add Contractor</Button>
+                        </Form.Group>
+                    )}
 
                     <Form.Group
                         className="mb-3"
@@ -245,6 +290,13 @@ const MaintenanceForm = ({
                     </Button>
                 </fieldset>
             </Form>
+            {showQuickAdd && (
+                <section>
+                    <h3>Add Contractor</h3>
+                    <ContractorForm onSave={handleAddContractor} onCancel={() => setShowQuickAdd(false)}
+                                    cancelLabel="Back to maintenance" onSavingChange={onContractorSavingChange} />
+                </section>
+            )}
         </>
     );
 };

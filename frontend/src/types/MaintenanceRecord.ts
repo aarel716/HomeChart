@@ -8,11 +8,13 @@ export interface MaintenanceRecord {
     category: string;
     performedBy: "DIY" | "Contractor";
     isActive: boolean;
+    contractorId: number | null;
+    contractorName: string | null;
 }
 
 export type NewMaintenanceRecord = Omit<
     MaintenanceRecord,
-    "id" | "propertyId" | "isActive"
+    "id" | "propertyId" | "isActive" | "contractorName"
 > & {
     categoryId: number;
 };

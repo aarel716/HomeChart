@@ -13,6 +13,8 @@ public record MaintenanceRecordResponse(
         LocalDate completionDate,
         String performedBy,
         boolean isActive,
-        BigDecimal cost
+        BigDecimal cost,
+        Long contractorId,
+        String contractorName
 ) {
 }

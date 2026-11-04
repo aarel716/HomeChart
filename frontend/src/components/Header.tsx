@@ -12,9 +12,10 @@ const Header = ({ darkMode, onToggleTheme }: HeaderProps) => {
                 <h1>HomeChart</h1>
                 <p>Your home's maintenance history in one place.</p>
 
-                <Link to="/" className="text-white">
-                    Dashboard
-                </Link>
+                <nav className="d-flex gap-3 mt-2" aria-label="Main navigation">
+                    <Link to="/" className="text-white">My Properties</Link>
+                    <Link to="/contractors" className="text-white">Contractors</Link>
+                </nav>
             </div>
 
             <button

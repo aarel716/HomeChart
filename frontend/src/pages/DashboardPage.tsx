@@ -11,6 +11,7 @@ interface DashboardPageProps {
     onAddRecord: () => void;
     onEditRecord: (record: MaintenanceRecord) => void;
     onArchiveRecord: (record: MaintenanceRecord) => void;
+    onRestoreRecord: (record: MaintenanceRecord) => void;
 }
 
 const DashboardPage = ({
@@ -20,8 +21,10 @@ const DashboardPage = ({
                            onAddRecord,
                            onEditRecord,
                            onArchiveRecord,
+                           onRestoreRecord,
                        }: DashboardPageProps) => {
-    const totalCost = records.reduce(
+    const activeRecords = records.filter((record) => record.isActive);
+    const totalCost = activeRecords.reduce(
         (total, record) => total + record.cost,
         0
     );
@@ -35,7 +38,7 @@ const DashboardPage = ({
             <div className="stats">
                 <div className="stat-card">
                     <h3>Active Records</h3>
-                    <p>{records.length}</p>
+                    <p>{activeRecords.length}</p>
                 </div>
 
                 <div className="stat-card">
@@ -49,15 +52,22 @@ const DashboardPage = ({
                 </div>
             </div>
 
-            <Button className="mb-4" onClick={onAddRecord} disabled={isBusy}>
-                Add Maintenance Record
-            </Button>
+            <div className="d-flex flex-wrap gap-2 mb-4">
+                <Button onClick={onAddRecord} disabled={isBusy}>Add Maintenance Record</Button>
+                <div>
+                    <Button variant="outline-secondary" disabled aria-describedby="schedule-note">
+                        Schedule Maintenance
+                    </Button>
+                    <small id="schedule-note" className="d-block text-body-secondary">Coming soon</small>
+                </div>
+            </div>
 
             <MaintenanceList
                 isBusy={isBusy}
                 records={records}
                 onEditRecord={onEditRecord}
                 onArchiveRecord={onArchiveRecord}
+                onRestoreRecord={onRestoreRecord}
             />
         </>
     );

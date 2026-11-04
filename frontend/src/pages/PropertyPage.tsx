@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Contractor, NewContractor } from "../types/Contractor.ts";
 import { Alert, Form, Spinner } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import DashboardPage from "./DashboardPage";
@@ -11,6 +12,10 @@ import type {
 
 interface PropertyPageProps {
     darkMode: boolean;
+    contractors: Contractor[];
+    contractorsLoading: boolean;
+    contractorsError: string;
+    onAddContractor: (values: NewContractor) => Promise<Contractor>;
     properties: Property[];
     records: MaintenanceRecord[];
     isLoading: boolean;
@@ -24,9 +29,14 @@ interface PropertyPageProps {
         values: NewMaintenanceRecord
     ) => Promise<void>;
     onArchiveRecord: (recordId: number) => Promise<void>;
+    onRestoreRecord: (recordId: number) => Promise<void>;
 }
 
 const PropertyPage = ({
+                          contractors,
+                          contractorsLoading,
+                          contractorsError,
+                          onAddContractor,
                           darkMode,
                           properties,
                           records,
@@ -35,6 +45,7 @@ const PropertyPage = ({
                           onAddRecord,
                           onUpdateRecord,
                           onArchiveRecord,
+                          onRestoreRecord,
                       }: PropertyPageProps) => {
     const { propertyId } = useParams();
     const navigate = useNavigate();
@@ -53,8 +64,12 @@ const PropertyPage = ({
 
     const propertyRecords = records.filter(
         (record) =>
-            record.propertyId === Number(propertyId) && record.isActive
-    );
+            record.propertyId === Number(propertyId)
+    ).map((record) => ({
+        ...record,
+        contractorName: contractors.find((item) => item.id === record.contractorId)?.name
+            ?? record.contractorName,
+    }));
 
     const selectProperty = (id: number) => {
         setEditingRecord(undefined);
@@ -103,12 +118,12 @@ const PropertyPage = ({
         }
     };
 
-    const handleArchive = async (record: MaintenanceRecord): Promise<void> => {
+    const handleStatus = async (record: MaintenanceRecord): Promise<void> => {
         if (isSaving || isArchiving) {
             return;
         }
 
-        const confirmed = window.confirm(
+        const confirmed = !record.isActive || window.confirm(
             `Archive "${record.title}"? It will be hidden from active history and totals, but kept in your records.`
         );
         if (!confirmed) {
@@ -119,11 +134,12 @@ const PropertyPage = ({
         setActionError("");
         setIsArchiving(true);
         try {
-            await onArchiveRecord(record.id);
-            setMessage(`Archived "${record.title}".`);
+            if (record.isActive) await onArchiveRecord(record.id);
+            else await onRestoreRecord(record.id);
+            setMessage(`${record.isActive ? "Archived" : "Restored"} "${record.title}".`);
         } catch (error) {
             setActionError(error instanceof Error
-                ? error.message : "Unable to archive. Please try again.");
+                ? error.message : "Unable to update record status. Please try again.");
         } finally {
             setIsArchiving(false);
         }
@@ -195,7 +211,7 @@ const PropertyPage = ({
                 </Form.Select>
             </Form.Group>
 
-            <p role="status">{isArchiving ? "Archiving record..." : message}</p>
+            <p role="status">{isArchiving ? "Updating record..." : message}</p>
             {actionError && <Alert variant="danger">{actionError}</Alert>}
 
             <DashboardPage
@@ -205,7 +221,8 @@ const PropertyPage = ({
                 records={propertyRecords}
                 onAddRecord={openAddModal}
                 onEditRecord={openEditModal}
-                onArchiveRecord={handleArchive}
+                onArchiveRecord={handleStatus}
+                onRestoreRecord={handleStatus}
             />
 
             <MaintenanceModal
@@ -214,6 +231,10 @@ const PropertyPage = ({
                 isSaving={isSaving}
                 initialRecord={editingRecord}
                 onClose={() => setShowModal(false)}
+                contractors={contractors}
+                contractorsLoading={contractorsLoading}
+                contractorsError={contractorsError}
+                onAddContractor={onAddContractor}
                 onSave={handleSave}
             />
         </>

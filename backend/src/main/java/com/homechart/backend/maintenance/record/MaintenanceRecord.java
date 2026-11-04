@@ -1,5 +1,6 @@
 package com.homechart.backend.maintenance.record;
 import com.homechart.backend.maintenance.category.MaintenanceCategory;
+import com.homechart.backend.contractor.Contractor;
 import com.homechart.backend.property.Property;
 import jakarta.persistence.*;
 
@@ -20,6 +21,10 @@ public class MaintenanceRecord {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private MaintenanceCategory category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contractor_id")
+    private Contractor contractor;
 
     @Column(nullable = false, length = 100)
     private String title;
@@ -57,6 +62,14 @@ public class MaintenanceRecord {
 
     public void setCategory(MaintenanceCategory category) {
         this.category = category;
+    }
+
+    public Contractor getContractor() {
+        return contractor;
+    }
+
+    public void setContractor(Contractor contractor) {
+        this.contractor = contractor;
     }
 
     public String getTitle() {

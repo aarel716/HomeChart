@@ -32,6 +32,9 @@ public record MaintenanceRecordRequest(
         @NotNull
         @DecimalMin("0.00")
         @Digits(integer = 8, fraction = 2)
-        BigDecimal cost
+        BigDecimal cost,
+
+        @Positive
+        Long contractorId
 ) {
 }

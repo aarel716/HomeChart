@@ -5,6 +5,8 @@ import com.homechart.backend.maintenance.category.MaintenanceCategoryRepository;
 import com.homechart.backend.maintenance.expense.MaintenanceExpense;
 import com.homechart.backend.maintenance.expense.MaintenanceExpenseRepository;
 import com.homechart.backend.property.Property;
+import com.homechart.backend.contractor.Contractor;
+import com.homechart.backend.contractor.ContractorRepository;
 import com.homechart.backend.property.PropertyRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,16 +24,19 @@ public class MaintenanceRecordService {
     private final PropertyRepository propertyRepository;
     private final MaintenanceCategoryRepository categoryRepository;
     private final MaintenanceExpenseRepository expenseRepository;
+    private final ContractorRepository contractorRepository;
 
     public MaintenanceRecordService(
             MaintenanceRecordRepository repository,
             PropertyRepository propertyRepository,
             MaintenanceCategoryRepository categoryRepository,
-            MaintenanceExpenseRepository expenseRepository) {
+            MaintenanceExpenseRepository expenseRepository,
+            ContractorRepository contractorRepository) {
         this.repository = repository;
         this.propertyRepository = propertyRepository;
         this.categoryRepository = categoryRepository;
         this.expenseRepository = expenseRepository;
+        this.contractorRepository = contractorRepository;
     }
 
     public List<MaintenanceRecordResponse> getAllRecords() {
@@ -63,7 +68,10 @@ public class MaintenanceRecordService {
                         HttpStatus.NOT_FOUND, "Maintenance category not found"
                 ));
 
+        Contractor contractor = selectContractor(request, property, null);
+
         MaintenanceRecord record = new MaintenanceRecord();
+        record.setContractor(contractor);
         record.setProperty(property);
         record.setCategory(category);
         record.setTitle(request.title().trim());
@@ -111,11 +119,12 @@ public class MaintenanceRecordService {
                         HttpStatus.NOT_FOUND, "Maintenance category not found"
                 ));
 
+        Contractor contractor = selectContractor(request, record.getProperty(), record);
+
         List<MaintenanceExpense> expenses = expenseRepository
                 .findByMaintenanceRecordId(id);
 
-        // This form edits one total job cost, not individual expense line items.
-        // Refuse to overwrite itemized data if it was added outside this form.
+        // Keep itemized expenses safe from the single-total form.
         if (expenses.size() > 1) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -123,6 +132,7 @@ public class MaintenanceRecordService {
             );
         }
 
+        record.setContractor(contractor);
         record.setCategory(category);
         record.setTitle(request.title().trim());
         record.setDescription(request.description() == null
@@ -157,6 +167,41 @@ public class MaintenanceRecordService {
         return toResponse(repository.save(record));
     }
 
+    private Contractor selectContractor(MaintenanceRecordRequest request,
+                                        Property property, MaintenanceRecord existingRecord) {
+        if ("DIY".equals(request.performedBy())) {
+            if (request.contractorId() != null) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "DIY work cannot have a contractor");
+            }
+            return null;
+        }
+
+        if (request.contractorId() == null) {
+            if (existingRecord != null && existingRecord.getContractor() == null
+                    && "Contractor".equals(existingRecord.getPerformedBy())) {
+                return null;
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select a contractor");
+        }
+
+        Contractor contractor = contractorRepository.findById(request.contractorId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Contractor not found"));
+
+        if (!contractor.getUser().getId().equals(property.getUser().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Contractor must belong to the property's owner");
+        }
+
+        boolean keepExisting = existingRecord != null && existingRecord.getContractor() != null
+                && existingRecord.getContractor().getId().equals(contractor.getId());
+        if (!contractor.isActive() && !keepExisting) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select an active contractor");
+        }
+        return contractor;
+    }
+
     private MaintenanceRecord findRecord(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -183,7 +228,9 @@ public class MaintenanceRecordService {
                 record.getCompletionDate(),
                 record.getPerformedBy(),
                 record.isActive(),
-                totalCost
+                totalCost,
+                record.getContractor() == null ? null : record.getContractor().getId(),
+                record.getContractor() == null ? null : record.getContractor().getName()
         );
     }
 }

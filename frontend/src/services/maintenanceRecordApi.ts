@@ -14,6 +14,8 @@ interface MaintenanceRecordResponse {
     performedBy: "DIY" | "Contractor";
     isActive: boolean;
     cost: number;
+    contractorId: number | null;
+    contractorName: string | null;
 }
 
 const toMaintenanceRecord = (
@@ -28,6 +30,8 @@ const toMaintenanceRecord = (
     performedBy: record.performedBy,
     isActive: record.isActive,
     cost: record.cost,
+    contractorId: record.contractorId,
+    contractorName: record.contractorName,
 });
 
 export const getMaintenanceRecords = async (): Promise<MaintenanceRecord[]> => {
@@ -60,6 +64,7 @@ export const createMaintenanceRecord = async (
             completionDate: values.date,
             performedBy: values.performedBy,
             cost: values.cost,
+            contractorId: values.contractorId,
         }),
     });
 
@@ -87,6 +92,7 @@ export const updateMaintenanceRecord = async (
             completionDate: values.date,
             performedBy: values.performedBy,
             cost: values.cost,
+            contractorId: values.contractorId,
         }),
     });
 
@@ -98,16 +104,17 @@ export const updateMaintenanceRecord = async (
     return toMaintenanceRecord(savedRecord);
 };
 
-export const archiveMaintenanceRecord = async (
-    recordId: number
+export const setMaintenanceRecordActive = async (
+    recordId: number,
+    isActive: boolean
 ): Promise<MaintenanceRecord> => {
     const response = await fetch(
-        `/api/maintenance-records/${recordId}/active?isActive=false`,
+        `/api/maintenance-records/${recordId}/active?isActive=${isActive}`,
         { method: "PATCH" }
     );
 
     if (!response.ok) {
-        throw new Error(await getErrorMessage(response, "Unable to archive maintenance record."));
+        throw new Error(await getErrorMessage(response, "Unable to update maintenance status."));
     }
 
     const savedRecord: MaintenanceRecordResponse = await response.json();

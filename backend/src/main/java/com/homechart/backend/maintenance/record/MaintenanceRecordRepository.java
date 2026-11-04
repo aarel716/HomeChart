@@ -8,11 +8,11 @@ import java.util.List;
 public interface MaintenanceRecordRepository
         extends JpaRepository<MaintenanceRecord, Long> {
 
-    // Fetch the record, category and property together for the history response.
     @Query("""
             SELECT record FROM MaintenanceRecord record
             JOIN FETCH record.category
             JOIN FETCH record.property
+            LEFT JOIN FETCH record.contractor
             ORDER BY record.completionDate DESC, record.id DESC
             """)
     List<MaintenanceRecord> findAllWithDetails();

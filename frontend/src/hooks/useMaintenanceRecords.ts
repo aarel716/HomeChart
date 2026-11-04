@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-    archiveMaintenanceRecord,
+    setMaintenanceRecordActive,
     createMaintenanceRecord,
     updateMaintenanceRecord,
     getMaintenanceRecords,
@@ -78,8 +78,8 @@ export const useMaintenanceRecords = () => {
         );
     };
 
-    const archiveRecord = async (recordId: number): Promise<void> => {
-        const savedRecord = await archiveMaintenanceRecord(recordId);
+    const changeRecordStatus = async (recordId: number, isActive: boolean): Promise<void> => {
+        const savedRecord = await setMaintenanceRecordActive(recordId, isActive);
         setRecords((previousRecords) =>
             previousRecords.map((record) =>
                 record.id === recordId ? savedRecord : record
@@ -93,6 +93,7 @@ export const useMaintenanceRecords = () => {
         error,
         addRecord,
         updateRecord,
-        archiveRecord,
+        archiveRecord: (id: number) => changeRecordStatus(id, false),
+        restoreRecord: (id: number) => changeRecordStatus(id, true),
     };
 };

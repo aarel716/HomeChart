@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Badge, Button, Form } from "react-bootstrap";
 import type { MaintenanceRecord } from "../types/MaintenanceRecord";
 
 interface MaintenanceListProps {
@@ -7,6 +7,7 @@ interface MaintenanceListProps {
     records: MaintenanceRecord[];
     onEditRecord: (record: MaintenanceRecord) => void;
     onArchiveRecord: (record: MaintenanceRecord) => void;
+    onRestoreRecord: (record: MaintenanceRecord) => void;
 }
 
 const MaintenanceList = ({
@@ -14,12 +15,15 @@ const MaintenanceList = ({
                              records,
                              onEditRecord,
                              onArchiveRecord,
+                             onRestoreRecord,
                          }: MaintenanceListProps) => {
     const [search, setSearch] = useState("");
+    const [showArchived, setShowArchived] = useState(false);
     const searchTerm = search.trim().toLowerCase();
 
-    const filteredRecords = records.filter((record) =>
-        `${record.title} ${record.category} ${record.description}`
+    const visibleRecords = records.filter((record) => record.isActive || showArchived);
+    const filteredRecords = visibleRecords.filter((record) =>
+        `${record.title} ${record.category} ${record.description} ${record.contractorName ?? ""}`
             .toLowerCase()
             .includes(searchTerm)
     );
@@ -38,12 +42,15 @@ const MaintenanceList = ({
                 />
             </Form.Group>
 
+            <Form.Check id="show-archived-maintenance" className="mb-3" label="Show archived maintenance"
+                        checked={showArchived} onChange={(event) => setShowArchived(event.target.checked)} />
+
             <p role="status">
-                Showing {filteredRecords.length} of {records.length} active records
+                Showing {filteredRecords.length} of {visibleRecords.length} {showArchived ? "total" : "active"} records
             </p>
 
-            {records.length === 0 ? (
-                <p>No active maintenance records.</p>
+            {visibleRecords.length === 0 ? (
+                <p>No {showArchived ? "" : "active "}maintenance records.</p>
             ) : filteredRecords.length === 0 ? (
                 <p>No matching records. Try another search.</p>
             ) : (
@@ -52,9 +59,11 @@ const MaintenanceList = ({
                         <div className="maintenance-item" key={record.id}>
                             <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
                                 <h4>{record.title}</h4>
+                                {!record.isActive && <Badge bg="secondary">Archived</Badge>}
                                 <p>{record.date}</p>
                                 <p>
                                     {record.category} · {record.performedBy}
+                                    {record.performedBy === "Contractor" && `: ${record.contractorName ?? "Not recorded"}`}
                                 </p>
                                 {record.description && <p>{record.description}</p>}
                             </div>
@@ -68,7 +77,7 @@ const MaintenanceList = ({
                                 </strong>
 
                                 <div className="d-flex flex-wrap justify-content-end gap-2">
-                                    <Button
+                                    {record.isActive && <Button
                                         disabled={isBusy}
                                         type="button"
                                         variant="outline-primary"
@@ -77,17 +86,17 @@ const MaintenanceList = ({
                                         onClick={() => onEditRecord(record)}
                                     >
                                         Edit
-                                    </Button>
+                                    </Button>}
 
                                     <Button
                                         disabled={isBusy}
                                         type="button"
                                         variant="outline-secondary"
                                         size="sm"
-                                        aria-label={`Archive ${record.title}`}
-                                        onClick={() => onArchiveRecord(record)}
+                                        aria-label={`${record.isActive ? "Archive" : "Restore"} ${record.title}`}
+                                        onClick={() => record.isActive ? onArchiveRecord(record) : onRestoreRecord(record)}
                                     >
-                                        Archive
+                                        {record.isActive ? "Archive" : "Restore"}
                                     </Button>
                                 </div>
                             </div>

@@ -50,6 +50,8 @@ export const sampleRecords: MaintenanceRecord[] = [
         category: "HVAC",
         performedBy: "Contractor",
         isActive: true,
+        contractorId: null,
+        contractorName: null,
     },
     {
         id: 2,
@@ -61,6 +63,8 @@ export const sampleRecords: MaintenanceRecord[] = [
         category: "Roofing",
         performedBy: "Contractor",
         isActive: true,
+        contractorId: null,
+        contractorName: null,
     },
     {
         id: 3,
@@ -72,6 +76,8 @@ export const sampleRecords: MaintenanceRecord[] = [
         category: "Plumbing",
         performedBy: "Contractor",
         isActive: true,
+        contractorId: null,
+        contractorName: null,
     },
 
 ];

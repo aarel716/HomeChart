@@ -220,7 +220,7 @@ const PropertyModal = ({
                             minLength={2}
                             maxLength={2}
                             pattern="[A-Za-z]{2}"
-                            placeholder="TX"
+                            placeholder=""
                             required
                         />
                     </Form.Group>
@@ -242,7 +242,7 @@ const PropertyModal = ({
                             autoComplete="postal-code"
                             maxLength={10}
                             pattern="[0-9]{5}(-[0-9]{4})?"
-                            placeholder="78701"
+                            placeholder=""
                         />
                     </Form.Group>
 
