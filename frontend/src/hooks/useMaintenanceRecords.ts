@@ -3,7 +3,7 @@ import {
     setMaintenanceRecordActive,
     createMaintenanceRecord,
     updateMaintenanceRecord,
-    getMaintenanceRecords,
+    getMaintenanceRecords, deleteMaintenanceRecord,
 } from "../services/maintenanceRecordApi";
 import type {
     MaintenanceRecord,
@@ -87,12 +87,21 @@ export const useMaintenanceRecords = () => {
         );
     };
 
+    const deleteRecord = async (recordId: number): Promise<void> => {
+        await deleteMaintenanceRecord(recordId);
+
+        setRecords((previousRecords) =>
+            previousRecords.filter((record) => record.id !== recordId)
+        );
+    };
+
     return {
         records,
         isLoading,
         error,
         addRecord,
         updateRecord,
+        deleteRecord,
         archiveRecord: (id: number) => changeRecordStatus(id, false),
         restoreRecord: (id: number) => changeRecordStatus(id, true),
     };

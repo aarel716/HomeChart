@@ -114,7 +114,7 @@ const ContractorsPage = ({
                     disabled={isBusy || isLoading}
                     onClick={() => openModal()}
                 >
-                    + Add Contractor
+                    Add Contractor
                 </Button>
             </div>
 

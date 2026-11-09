@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { Link, Route, Routes } from "react-router-dom";
-import { Alert, Spinner } from "react-bootstrap";
+import {useState} from "react";
+import {Link, Route, Routes} from "react-router-dom";
+import {Alert, Spinner} from "react-bootstrap";
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import PropertyPage from "./pages/PropertyPage";
-import { useProperties } from "./hooks/useProperties";
-import { useMaintenanceRecords } from "./hooks/useMaintenanceRecords";
+import {useProperties} from "./hooks/useProperties";
+import {useMaintenanceRecords} from "./hooks/useMaintenanceRecords";
 import ContractorsPage from "./pages/ContractorsPage";
-import { useContractors } from "./hooks/useContractors";
+import {useContractors} from "./hooks/useContractors";
 import "./App.css";
 
 const App = () => {
@@ -30,6 +30,7 @@ const App = () => {
         updateRecord,
         archiveRecord,
         restoreRecord,
+        deleteRecord,
     } = useMaintenanceRecords();
 
     const contractorData = useContractors();
@@ -93,6 +94,7 @@ const App = () => {
                                     onUpdateRecord={updateRecord}
                                     onArchiveRecord={archiveRecord}
                                     onRestoreRecord={restoreRecord}
+                                    onDeleteRecord={deleteRecord}
                                     contractors={contractorData.contractors}
                                     contractorsLoading={contractorData.isLoading}
                                     contractorsError={contractorData.error}
@@ -108,8 +110,8 @@ const App = () => {
                                                                          error={contractorData.error}
                                                                          onAddContractor={contractorData.addContractor}
                                                                          onUpdateContractor={contractorData.updateContractor}
-                                                                         onChangeStatus={contractorData.changeContractorStatus} />
-                                                   } />
+                                                                         onChangeStatus={contractorData.changeContractorStatus}/>
+                                                   }/>
 
                         <Route
                             path="*"

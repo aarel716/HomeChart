@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Badge, Button, Form } from "react-bootstrap";
-import type { MaintenanceRecord } from "../types/MaintenanceRecord";
+import {useState} from "react";
+import {Badge, Button, Form} from "react-bootstrap";
+import type {MaintenanceRecord} from "../types/MaintenanceRecord";
 
 interface MaintenanceListProps {
     isBusy: boolean;
@@ -8,6 +8,8 @@ interface MaintenanceListProps {
     onEditRecord: (record: MaintenanceRecord) => void;
     onArchiveRecord: (record: MaintenanceRecord) => void;
     onRestoreRecord: (record: MaintenanceRecord) => void;
+    onDeleteRecord: (record: MaintenanceRecord) => void;
+
 }
 
 const MaintenanceList = ({
@@ -16,10 +18,12 @@ const MaintenanceList = ({
                              onEditRecord,
                              onArchiveRecord,
                              onRestoreRecord,
+                             onDeleteRecord
                          }: MaintenanceListProps) => {
     const [search, setSearch] = useState("");
     const [showArchived, setShowArchived] = useState(false);
     const searchTerm = search.trim().toLowerCase();
+
 
     const visibleRecords = records.filter((record) => record.isActive || showArchived);
     const filteredRecords = visibleRecords.filter((record) =>
@@ -43,7 +47,7 @@ const MaintenanceList = ({
             </Form.Group>
 
             <Form.Check id="show-archived-maintenance" className="mb-3" label="Show archived maintenance"
-                        checked={showArchived} onChange={(event) => setShowArchived(event.target.checked)} />
+                        checked={showArchived} onChange={(event) => setShowArchived(event.target.checked)}/>
 
             <p role="status">
                 Showing {filteredRecords.length} of {visibleRecords.length} {showArchived ? "total" : "active"} records
@@ -57,12 +61,12 @@ const MaintenanceList = ({
                 <div className="maintenance-list">
                     {filteredRecords.map((record) => (
                         <div className="maintenance-item" key={record.id}>
-                            <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
+                            <div style={{minWidth: 0, overflowWrap: "anywhere"}}>
                                 <h4>{record.title}</h4>
                                 {!record.isActive && <Badge bg="secondary">Archived</Badge>}
                                 <p>{record.date}</p>
                                 <p>
-                                    {record.category} · {record.performedBy}
+                                    {record.category} - {record.performedBy}
                                     {record.performedBy === "Contractor" && `: ${record.contractorName ?? "Not recorded"}`}
                                 </p>
                                 {record.description && <p>{record.description}</p>}
@@ -86,6 +90,17 @@ const MaintenanceList = ({
                                         onClick={() => onEditRecord(record)}
                                     >
                                         Edit
+                                    </Button>}
+
+                                    {!record.isActive && <Button
+                                        disabled={isBusy}
+                                        type="button"
+                                        variant="outline-danger"
+                                        size="sm"
+                                        aria-label={`DELETE ${record.title}`}
+                                        onClick={() => onDeleteRecord(record)}
+                                    >
+                                        DELETE
                                     </Button>}
 
                                     <Button

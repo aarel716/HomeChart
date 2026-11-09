@@ -1,8 +1,8 @@
 import {Button} from "react-bootstrap";
 import PropertyCard from "../components/PropertyCard";
-import type { Property } from "../types/Property";
+import type {Property} from "../types/Property";
 import MaintenanceList from "../components/MaintenanceList";
-import type { MaintenanceRecord } from "../types/MaintenanceRecord";
+import type {MaintenanceRecord} from "../types/MaintenanceRecord";
 
 interface DashboardPageProps {
     isBusy: boolean;
@@ -12,6 +12,8 @@ interface DashboardPageProps {
     onEditRecord: (record: MaintenanceRecord) => void;
     onArchiveRecord: (record: MaintenanceRecord) => void;
     onRestoreRecord: (record: MaintenanceRecord) => void;
+    onDeleteRecord: (record: MaintenanceRecord) => void;
+
 }
 
 const DashboardPage = ({
@@ -22,6 +24,7 @@ const DashboardPage = ({
                            onEditRecord,
                            onArchiveRecord,
                            onRestoreRecord,
+                           onDeleteRecord,
                        }: DashboardPageProps) => {
     const activeRecords = records.filter((record) => record.isActive);
     const totalCost = activeRecords.reduce(
@@ -33,7 +36,7 @@ const DashboardPage = ({
         <>
             <h2>Property Dashboard</h2>
 
-            <PropertyCard property={property} />
+            <PropertyCard property={property}/>
 
             <div className="stats">
                 <div className="stat-card">
@@ -55,10 +58,10 @@ const DashboardPage = ({
             <div className="d-flex flex-wrap gap-2 mb-4">
                 <Button onClick={onAddRecord} disabled={isBusy}>Add Maintenance Record</Button>
                 <div>
-                    <Button variant="outline-secondary" disabled aria-describedby="schedule-note">
+                    <Button>
                         Schedule Maintenance
                     </Button>
-                    <small id="schedule-note" className="d-block text-body-secondary">Coming soon</small>
+
                 </div>
             </div>
 
@@ -68,6 +71,7 @@ const DashboardPage = ({
                 onEditRecord={onEditRecord}
                 onArchiveRecord={onArchiveRecord}
                 onRestoreRecord={onRestoreRecord}
+                onDeleteRecord={onDeleteRecord}
             />
         </>
     );

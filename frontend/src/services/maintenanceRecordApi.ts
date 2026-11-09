@@ -121,6 +121,21 @@ export const setMaintenanceRecordActive = async (
     return toMaintenanceRecord(savedRecord);
 };
 
+export const deleteMaintenanceRecord = async (
+    recordId: number
+): Promise<void> => {
+    const response = await fetch(
+        `/api/maintenance-records/${recordId}`,
+        { method: "DELETE" }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            await getErrorMessage(response, "Unable to delete maintenance record.")
+        );
+    }
+};
+
 const getErrorMessage = async (
     response: Response,
     fallback: string

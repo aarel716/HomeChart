@@ -1,10 +1,10 @@
-import { useState } from "react";
-import type { Contractor, NewContractor } from "../types/Contractor.ts";
-import { Alert, Form, Spinner } from "react-bootstrap";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {useState} from "react";
+import type {Contractor, NewContractor} from "../types/Contractor.ts";
+import {Alert, Form, Spinner} from "react-bootstrap";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import DashboardPage from "./DashboardPage";
 import MaintenanceModal from "../components/MaintenanceModal";
-import type { Property } from "../types/Property";
+import type {Property} from "../types/Property";
 import type {
     MaintenanceRecord,
     NewMaintenanceRecord,
@@ -30,6 +30,7 @@ interface PropertyPageProps {
     ) => Promise<void>;
     onArchiveRecord: (recordId: number) => Promise<void>;
     onRestoreRecord: (recordId: number) => Promise<void>;
+    onDeleteRecord: (recordId: number) => Promise<void>;
 }
 
 const PropertyPage = ({
@@ -46,8 +47,9 @@ const PropertyPage = ({
                           onUpdateRecord,
                           onArchiveRecord,
                           onRestoreRecord,
+                          onDeleteRecord,
                       }: PropertyPageProps) => {
-    const { propertyId } = useParams();
+    const {propertyId} = useParams();
     const navigate = useNavigate();
 
     const [message, setMessage] = useState("");
@@ -145,6 +147,37 @@ const PropertyPage = ({
         }
     };
 
+    const handleDelete = async (record: MaintenanceRecord): Promise<void> => {
+        if (isSaving || isArchiving) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Permanently delete "${record.title}" and its expenses? This cannot be undone.`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setMessage("");
+        setActionError("");
+        setIsArchiving(true);
+
+        try {
+            await onDeleteRecord(record.id);
+            setMessage(`Deleted "${record.title}".`);
+        } catch (error) {
+            setActionError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to delete record. Please try again."
+            );
+        } finally {
+            setIsArchiving(false);
+        }
+    };
+
     if (!selectedProperty) {
         return (
             <>
@@ -223,6 +256,7 @@ const PropertyPage = ({
                 onEditRecord={openEditModal}
                 onArchiveRecord={handleStatus}
                 onRestoreRecord={handleStatus}
+                onDeleteRecord={handleDelete}
             />
 
             <MaintenanceModal

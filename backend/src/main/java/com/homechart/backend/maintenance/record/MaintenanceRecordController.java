@@ -42,4 +42,10 @@ public class MaintenanceRecordController {
             @RequestParam boolean isActive) {
         return service.setRecordActive(id, isActive);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRecord(@PathVariable Long id) {
+        service.deleteRecord(id);
+    }
 }

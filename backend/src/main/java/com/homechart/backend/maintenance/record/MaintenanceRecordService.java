@@ -166,6 +166,24 @@ public class MaintenanceRecordService {
         record.setActive(isActive);
         return toResponse(repository.save(record));
     }
+    @Transactional
+    public void deleteRecord(Long id) {
+        MaintenanceRecord record = findRecord(id);
+
+        if (record.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Archive the maintenance record before deleting it"
+            );
+        }
+
+        List<MaintenanceExpense> expenses =
+                expenseRepository.findByMaintenanceRecordId(id);
+
+        expenseRepository.deleteAll(expenses);
+
+        repository.delete(record);
+    }
 
     private Contractor selectContractor(MaintenanceRecordRequest request,
                                         Property property, MaintenanceRecord existingRecord) {

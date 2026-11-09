@@ -70,6 +70,7 @@ export const useProperties = () => {
         await setPropertyActive(propertyId, true);
     };
 
+
     return {
         properties,
         isLoading,
